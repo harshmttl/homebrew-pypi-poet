@@ -148,7 +148,7 @@ def make_graph(pkg):
     pkg_deps = recursive_dependencies(pkg_resources.Requirement.parse(pkg))
 
     dependencies = {key: {} for key in pkg_deps if key not in ignore}
-   # del dependencies[pkg]
+    del dependencies[pkg]
     print(dependencies)
     installed_packages = pkg_resources.working_set
     versions = {package.key: package.version for package in installed_packages}

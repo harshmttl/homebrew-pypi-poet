@@ -21,7 +21,8 @@ import sys
 import warnings
 
 import pkg_resources
-
+from pip._internal.utils.direct_url_helpers import dist_get_direct_url
+from pip._internal.models.direct_url import VcsInfo
 from .templates import FORMULA_TEMPLATE, RESOURCE_TEMPLATE
 from .version import __version__
 
@@ -51,7 +52,6 @@ class ConflictingDependencyWarning(UserWarning):
 def recursive_dependencies(package):
     if not isinstance(package, pkg_resources.Requirement):
         raise TypeError("Expected a Requirement; got a %s" % type(package))
-
     discovered = {package.project_name.lower()}
     visited = set()
 
@@ -77,10 +77,22 @@ def recursive_dependencies(package):
 
 
 def research_package(name, version=None):
+    print("Attempting to fetch package "+name)
+    d = {}
+    if version: 
+        direct_url_from_dist = dist_get_direct_url(pkg_resources.get_distribution(name))
+        if direct_url_from_dist:
+            info = direct_url_from_dist.info
+            if isinstance(info,VcsInfo):
+                d['vcs'] = info.vcs
+                d['branch'] = info.requested_revision
+                d['revision'] = info.commit_id
+                d['url'] = direct_url_from_dist.redacted_url.replace("ssh://git@","https://")
+            d['name'] = name
+            return d     
     with closing(urlopen("https://pypi.io/pypi/{}/json".format(name))) as f:
         reader = codecs.getreader("utf-8")
         pkg_data = json.load(reader(f))
-    d = {}
     d['name'] = pkg_data['info']['name']
     d['homepage'] = pkg_data['info'].get('home_page', '')
     artefact = None
@@ -88,6 +100,8 @@ def research_package(name, version=None):
         for pypi_version in pkg_data['releases']:
             if pkg_resources.safe_version(pypi_version) == version:
                 for version_artefact in pkg_data['releases'][pypi_version]:
+                    if version_artefact['packagetype'] == 'bdist_wheel':
+                        artefact = version_artefact
                     if version_artefact['packagetype'] == 'sdist':
                         artefact = version_artefact
                         break
@@ -132,6 +146,8 @@ def make_graph(pkg):
     pkg_deps = recursive_dependencies(pkg_resources.Requirement.parse(pkg))
 
     dependencies = {key: {} for key in pkg_deps if key not in ignore}
+   # del dependencies[pkg]
+    print(dependencies)
     installed_packages = pkg_resources.working_set
     versions = {package.key: package.version for package in installed_packages}
     for package in dependencies:
@@ -142,6 +158,8 @@ def make_graph(pkg):
                           "resources for its dependencies.".format(package),
                           PackageNotInstalledWarning)
             dependencies[package]['version'] = None
+            raise Exception("{} is not installed so we cannot compute "
+                          "resources for its dependencies.".format(package))
 
     for package in dependencies:
         package_data = research_package(package, dependencies[package]['version'])

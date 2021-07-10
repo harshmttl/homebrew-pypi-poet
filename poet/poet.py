@@ -110,8 +110,6 @@ def research_package(name, version=None):
         for pypi_version in pkg_data['releases']:
             if pkg_resources.safe_version(pypi_version) == version:
                 for version_artefact in pkg_data['releases'][pypi_version]:
-                    if version_artefact['packagetype'] == 'bdist_wheel':
-                        artefact = version_artefact
                     if version_artefact['packagetype'] == 'sdist':
                         artefact = version_artefact
                         break
@@ -119,7 +117,11 @@ def research_package(name, version=None):
             warnings.warn("Could not find an exact version match for "
                           "{} version {}; using newest instead".
                           format(name, version), PackageVersionNotFoundWarning)
-
+            warnings.warn("Trying github hack instead")
+            vcs_link = pkg_data['info']['project_urls']['Source']+"archive/v"+version+".tar.gz"
+            d['url'] = vcs_link
+            d['name'] = name
+            return d
     if artefact is None:  # no version given or exact match not found
         for url in pkg_data['urls']:
             if url['packagetype'] == 'sdist':

@@ -83,6 +83,7 @@ def research_package(name, version=None):
         print("version is "+ version) 
         direct_url_from_dist = dist_get_direct_url(pkg_resources.get_distribution(name))
         if direct_url_from_dist:
+            print(direct_url_from_dist)
             info = direct_url_from_dist.info
             if isinstance(info,VcsInfo):
                 d['vcs'] = info.vcs

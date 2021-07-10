@@ -79,7 +79,8 @@ def recursive_dependencies(package):
 def research_package(name, version=None):
     print("Attempting to fetch package "+name)
     d = {}
-    if version: 
+    if version:
+        print("version is "+ version) 
         direct_url_from_dist = dist_get_direct_url(pkg_resources.get_distribution(name))
         if direct_url_from_dist:
             info = direct_url_from_dist.info

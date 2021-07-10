@@ -88,14 +88,14 @@ def research_package(name, version=None):
                 d['vcs'] = info.vcs
                 d['branch'] = info.requested_revision
                 d['revision'] = info.commit_id
-                d['url'] = direct_url_from_dist.redacted_url.replace("ssh://git@","https://")
+                d['url'] = direct_url_from_dist.redacted_url.replace("ssh://git@github.com/","git@github.com:")
             elif isinstance(info, DirInfo) and dist.has_metadata("METADATA"):
                 metadata = dist.get_metadata("METADATA")
                 feed_parser = FeedParser()
                 feed_parser.feed(metadata)
                 meta = feed_parser.close()
                 d['version'] = meta.get("Version")
-                d['url'] = meta.get("Home-page")
+                d['url'] = meta.get("Home-page").replace("https://github.com/","git@github.com:")
                 d['vcs'] = "git"
                 d['branch'] = "main"
             d['name'] = name

@@ -43,8 +43,9 @@ FORMULA_TEMPLATE = env.from_string(dedent("""\
 RESOURCE_TEMPLATE = env.from_string("""\
   resource "{{ resource.name }}" do
     url "{{ resource.url }}"{% if resource.vcs %}, :using => :{{resource.vcs}}{% endif %}{% if resource.branch %}, :branch => "{{ resource.branch }}"{% endif %}{% if resource.revision %}, :revision => "{{ resource.revision}}"{% endif %}
+    {%if resource.checksum %}
 
-    {%if resource.checksum %}{{ resource.checksum_type }} "{{ resource.checksum }}"{% endif %}
+    {{resource.checksum_type}} "{{ resource.checksum }}"{% endif %}
 
   end
 """)

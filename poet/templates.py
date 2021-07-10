@@ -27,6 +27,8 @@ FORMULA_TEMPLATE = env.from_string(dedent("""\
 
     {%   endfor %}
     {% endif %}
+
+
       def install
         virtualenv_install_with_resources
       end
@@ -43,5 +45,6 @@ RESOURCE_TEMPLATE = env.from_string("""\
     url "{{ resource.url }}"{% if resource.vcs %}, :using => {{resource.vcs}}{% endif %}{% if resource.branch %}, :branch => "{{ resource.branch }}"{% endif %}{% if resource.revision %}, :revision => "{{ resource.revision}}"{% endif %}
 
     {%if resource.checksum %}{{ resource.checksum_type }} "{{ resource.checksum }}"{% endif %}
+
   end
 """)

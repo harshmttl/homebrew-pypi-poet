@@ -12,25 +12,22 @@ env.filters["dash_to_studly"] = dash_to_studly
 FORMULA_TEMPLATE = env.from_string(dedent("""\
     class {{ package.name|dash_to_studly }} < Formula
       include Language::Python::Virtualenv
+        url "{{ package.url }}"{% if package.vcs %}, :using => {{package.vcs}}{% endif %}{% if package.branch %}, :branch => "{{ package.branch }}"{% endif %}
+        {% if package.checksum %}sha256 "{{ package.checksum }}"{% endif %}
 
-      desc "Shiny new formula"
-      homepage "{{ package.homepage }}"
-      url "{{ package.url }}"
-      sha256 "{{ package.checksum }}"
+      {% if package.version %}version "{{package.version}}"{% endif %}
 
-      depends_on "{{ python }}"
+
+      depends_on {% raw %}"python@3.9"{% endraw %}
 
     {% if resources %}
     {%   for resource in resources %}
-    {%     include ResourceTemplate %}
 
+    {%     include ResourceTemplate %}
 
     {%   endfor %}
     {% endif %}
       def install
-    {% if python == "python3" %}
-        virtualenv_create(libexec, "python3")
-    {% endif %}
         virtualenv_install_with_resources
       end
 
@@ -43,7 +40,8 @@ FORMULA_TEMPLATE = env.from_string(dedent("""\
 
 RESOURCE_TEMPLATE = env.from_string("""\
   resource "{{ resource.name }}" do
-    url "{{ resource.url }}"
-    {{ resource.checksum_type }} "{{ resource.checksum }}"
+    url "{{ resource.url }}"{% if resource.vcs %}, :using => {{resource.vcs}}{% endif %}{% if resource.branch %}, :branch => "{{ resource.branch }}"{% endif %}{% if resource.revision %}, :revision => "{{ resource.revision}}"{% endif %}
+
+    {%if resource.checksum %}{{ resource.checksum_type }} "{{ resource.checksum }}"{% endif %}
   end
 """)

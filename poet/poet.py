@@ -22,7 +22,8 @@ import warnings
 
 import pkg_resources
 from pip._internal.utils.direct_url_helpers import dist_get_direct_url
-from pip._internal.models.direct_url import VcsInfo
+from pip._internal.models.direct_url import VcsInfo, DirInfo
+from email.parser import FeedParser
 from .templates import FORMULA_TEMPLATE, RESOURCE_TEMPLATE
 from .version import __version__
 
@@ -79,7 +80,8 @@ def recursive_dependencies(package):
 def research_package(name, version=None):
     d = {}
     if version:
-        direct_url_from_dist = dist_get_direct_url(pkg_resources.get_distribution(name))
+        dist = pkg_resources.get_distribution(name)
+        direct_url_from_dist = dist_get_direct_url(dist)
         if direct_url_from_dist:
             info = direct_url_from_dist.info
             if isinstance(info,VcsInfo):
@@ -87,6 +89,15 @@ def research_package(name, version=None):
                 d['branch'] = info.requested_revision
                 d['revision'] = info.commit_id
                 d['url'] = direct_url_from_dist.redacted_url.replace("ssh://git@","https://")
+            elif isinstance(info, DirInfo) and dist.has_metadata("METADATA"):
+                metadata = dist.get_metadata("METADATA")
+                feed_parser = FeedParser()
+                feed_parser.feed(metadata)
+                meta = feed_parser.close()
+                d['version'] = meta.get("Version")
+                d['url'] = meta.get("Home-page")
+                d['vcs'] = "git"
+                d['branch'] = "main"
             d['name'] = name
             return d     
     with closing(urlopen("https://pypi.io/pypi/{}/json".format(name))) as f:

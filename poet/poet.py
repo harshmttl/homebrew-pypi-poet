@@ -77,13 +77,10 @@ def recursive_dependencies(package):
 
 
 def research_package(name, version=None):
-    print("Attempting to fetch package "+name)
     d = {}
     if version:
-        print("version is "+ version) 
         direct_url_from_dist = dist_get_direct_url(pkg_resources.get_distribution(name))
         if direct_url_from_dist:
-            print(direct_url_from_dist)
             info = direct_url_from_dist.info
             if isinstance(info,VcsInfo):
                 d['vcs'] = info.vcs
@@ -149,7 +146,6 @@ def make_graph(pkg):
 
     dependencies = {key: {} for key in pkg_deps if key not in ignore}
     del dependencies[pkg]
-    print(dependencies)
     installed_packages = pkg_resources.working_set
     versions = {package.key: package.version for package in installed_packages}
     for package in dependencies:

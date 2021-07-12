@@ -17,6 +17,7 @@ FORMULA_TEMPLATE = env.from_string(dedent("""\
 
       {% if package.version %}version "{{package.version}}"{% endif %}
 
+
       depends_on {% raw %}"python@3.9"{% endraw %}
 
     {% if resources %}

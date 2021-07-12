@@ -15,7 +15,7 @@ FORMULA_TEMPLATE = env.from_string(dedent("""\
         url "{{ package.url }}"{% if package.vcs %}, :using => :{{package.vcs}}{% endif %}{% if package.branch %}, :branch => "{{ package.branch }}"{% endif %}
         {% if package.checksum %}sha256 "{{ package.checksum }}"{% endif %}
 
-
+      {% if package.version %}version "{{package.version}}"{% endif %}
 
       depends_on {% raw %}"python@3.9"{% endraw %}
 

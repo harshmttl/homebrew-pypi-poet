@@ -21,7 +21,12 @@ import sys
 import warnings
 
 import pkg_resources
-from pip._internal.utils.direct_url_helpers import dist_get_direct_url
+from pip._vendor.pkg_resources import Distribution
+from pip._internal.models.direct_url import (
+    DIRECT_URL_METADATA_NAME,
+    DirectUrl,
+    DirectUrlValidationError,
+)
 from pip._internal.models.direct_url import VcsInfo, DirInfo
 from email.parser import FeedParser
 from .templates import FORMULA_TEMPLATE, RESOURCE_TEMPLATE
@@ -36,6 +41,7 @@ except ImportError:
 
 # Show warnings and greater by default
 logging.basicConfig(level=int(os.environ.get("POET_DEBUG", 30)))
+logger = logging.getLogger(__name__)
 
 
 class PackageNotInstalledWarning(UserWarning):
@@ -48,6 +54,30 @@ class PackageVersionNotFoundWarning(UserWarning):
 
 class ConflictingDependencyWarning(UserWarning):
     pass
+
+
+def dist_get_direct_url(dist):
+    # type: (Distribution) -> Optional[DirectUrl]
+    """Obtain a DirectUrl from a pkg_resource.Distribution.
+    Returns None if the distribution has no `direct_url.json` metadata,
+    or if `direct_url.json` is invalid.
+    """
+    if not dist.has_metadata(DIRECT_URL_METADATA_NAME):
+        return None
+    try:
+        return DirectUrl.from_json(dist.get_metadata(DIRECT_URL_METADATA_NAME))
+    except (
+        DirectUrlValidationError,
+        json.JSONDecodeError,
+        UnicodeDecodeError,
+    ) as e:
+        logger.warning(
+            "Error parsing %s for %s: %s",
+            DIRECT_URL_METADATA_NAME,
+            dist.project_name,
+            e,
+        )
+        return None
 
 
 def recursive_dependencies(package):

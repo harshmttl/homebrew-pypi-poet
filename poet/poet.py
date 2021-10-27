@@ -10,9 +10,9 @@ spits out Homebrew resource stanzas.
 
 from __future__ import print_function
 import argparse
+import requests
 import codecs
 from collections import OrderedDict
-from contextlib import closing
 from hashlib import sha256
 import json
 import logging
@@ -130,9 +130,8 @@ def research_package(name, version=None):
                 d['branch'] = "main"
             d['name'] = name
             return d     
-    with closing(urlopen("https://pypi.io/pypi/{}/json".format(name))) as f:
-        reader = codecs.getreader("utf-8")
-        pkg_data = json.load(reader(f))
+    f = "https://pypi.org/pypi/{}/json".format(name)
+    pkg_data = requests.get(f).json()
     d['name'] = pkg_data['info']['name']
     d['homepage'] = pkg_data['info'].get('home_page', '')
     artefact = None
